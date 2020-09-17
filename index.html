@@ -1,0 +1,173 @@
+<html>
+    <head>
+        <title>Spin and win</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="main.css" type="text/css" />
+        <script type="text/javascript" src="Winwheel.js"></script>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+        <style type="text/css">
+            body {
+                background: url('bg.png');
+                background-repeat: no-repeat;
+                background-size: cover;
+            }
+            .close:not(:disabled):not(.disabled) {
+    cursor: pointer;
+    display: none;
+}
+        </style>
+    </head>
+    <body>
+        <div align="center">
+            <table cellpadding="0" cellspacing="0" border="0" align="center">
+            <tr>
+                <td width="438" height="582" class="the_wheel" align="center" valign="center">
+                    <canvas id="canvas" width="434" height="434">
+                        <p style="{color: white}" align="center">Sorry, your browser doesn't support canvas. Please try another.</p>
+                    </canvas>
+                </td>
+            </tr>
+            <tr>
+                <td class="text-center">
+                    <img id="spin_button" src="spin_on.png" alt="Spin" onClick="startSpin();" />
+                </td>
+            </tr>
+        </table>
+        
+        <script>
+            // Create new wheel object specifying the parameters at creation time.
+            let theWheel = new Winwheel({
+                'numSegments'       : 6,                 // Specify number of segments.
+                'outerRadius'       : 212,               // Set outer radius so wheel fits inside the background.
+                'innerRadius'       : 60,
+                'drawText'          : false,              // Code drawn text can be used with segment images.
+                'textFontSize'      : 16,
+                'textOrientation'   : 'horizontal',
+                'textAlignment'     : 'outer',
+                // 'textMargin'        : 90,
+                // 'textFontFamily'    : 'monospace',
+                // 'textStrokeStyle'   : 'black',
+                // 'textLineWidth'     : 3,
+                // 'textFillStyle'     : 'white',
+                'drawMode'          : 'segmentImage',    // Must be segmentImage to draw wheel using one image per segemnt.
+                'segments'          :                    // Define segments including image and text.
+                [
+                   {'image' : '1.png',  'text' : '₹1000'},
+                   {'image' : '2.png',   'text' : '₹100 back Setup UPI'},
+                   {'image' : '3.png',  'text' : '₹50 back Send Money'},
+                   {'image' : '4.png', 'text' : 'Upto ₹500 scan UPI QR'},
+                   {'image' : '5.png',  'text' : 'Better luck next time'},
+                   {'image' : '6.png', 'text' : '₹75 on Recharge Bill'}
+                ],
+                'animation' :           // Specify the animation to use.
+                {
+                    'type'     : 'spinToStop',
+                    'duration' : 10,    // Duration in seconds.
+                    'spins'    : 3,     // Default number of complete spins.
+                    'callbackFinished' : alertPrize,
+                    // 'callbackSound'    : playSound,   // Function to call when the tick sound is to be triggered.
+                    'soundTrigger'     : 'pin'        // Specify pins are to trigger the sound, the other option is 'segment'.
+                },
+            });
+
+            // Vars used by the code in this page to do power controls.
+            let wheelPower    = 0;
+            let wheelSpinning = false;
+
+            // -------------------------------------------------------
+            // Function to handle the onClick on the power buttons.
+            // -------------------------------------------------------
+            function powerSelected(powerLevel)
+            {
+                // Ensure that power can't be changed while wheel is spinning.
+                if (wheelSpinning == false) {
+
+                    // Set wheelPower var used when spin button is clicked.
+                    wheelPower = powerLevel;
+
+                    // Light up the spin button by changing it's source image and adding a clickable class to it.
+                    document.getElementById('spin_button').src = "spin_on.png";
+                    document.getElementById('spin_button').className = "clickable";
+                }
+            }
+
+            // -------------------------------------------------------
+            // Click handler for spin button.
+            // -------------------------------------------------------
+            function startSpin()
+            {
+                // Ensure that spinning can't be clicked again while already running.
+                if (wheelSpinning == false) {
+                    theWheel.animation.spins = Math.floor((Math.random() * (10 - 6)) + 6);
+                    // Disable the spin button so can't click again while wheel is spinning.
+                    document.getElementById('spin_button').src = "spin_off.png";
+                    document.getElementById('spin_button').className = "";
+
+                    // Begin the spin animation by calling startAnimation on the wheel object.
+                    theWheel.startAnimation();
+
+                    // Set to true so that power can't be changed and spin button re-enabled during
+                    // the current animation. The user will have to reset before spinning again.
+                    wheelSpinning = true;
+                }
+            }
+
+            // -------------------------------------------------------
+            // Function for reset button.
+            // -------------------------------------------------------
+            function resetWheel()
+            {
+                theWheel.stopAnimation(false);  // Stop the animation, false as param so does not call callback function.
+                theWheel.rotationAngle = 0;     // Re-set the wheel angle to 0 degrees.
+                theWheel.draw();                // Call draw to render changes to the wheel.
+
+                wheelSpinning = false;          // Reset to false to power buttons and spin can be clicked again.
+            }
+
+            function alertPrize(indicatedSegment)
+            {
+                
+                $("#result_text").html(indicatedSegment.text);
+                $("#exampleModalCenter").modal('show');
+
+                document.getElementById('spin_button').src = "spin_on.png";
+                document.getElementById('spin_button').className = "clickable";
+                // resetWheel();
+            }
+        </script>
+        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalCenterTitle">Results</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                    <p id="result_text">
+                        
+                    </p>
+                </div>
+                <div class="modal-footer">
+                  <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="resetWheel()">Close</button> -->
+                  <button type="button" class="btn btn-primary"onclick="myFunction()">Continue</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <script>
+               myFunction = (e) => {
+               
+                    window.location.href = `https://www.amazon.in/`;
+                
+            };
+          </script>
+    </body>
+
+</html>
